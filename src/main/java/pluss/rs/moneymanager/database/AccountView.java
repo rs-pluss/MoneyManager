@@ -65,7 +65,7 @@ public class AccountView {
                 BigDecimal balance = rs.getBigDecimal("balance");
                 account = new Account(id, name, balance);
             } else {
-                throw new RuntimeException("Can't find Model by id: " + request_id);
+                account = null;
             }
             return account;
         } catch (SQLException e) {

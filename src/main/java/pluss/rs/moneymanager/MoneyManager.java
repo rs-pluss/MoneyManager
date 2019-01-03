@@ -20,16 +20,19 @@ import static spark.Spark.get;
 import static spark.Spark.post;
 
 public class MoneyManager {
+    class Messages {
+        public static final String ACCOUNT_NOT_FOUND = "Unable to find account";
+        public static final String SENDER_DONT_HAVE_ENOUGH_MONEY = "Sender account don't have enough money.";
+        public static final String TRANSFER_SUCCESS = "Transfer success";
+    }
+
     public static void main(String[] args) {
         get("/create", MoneyManager::initializeDatabase);
         post("/transfer", MoneyManager::transfer);
     }
 
 
-
-
     private static String initializeDatabase(Request request, Response response) {
-
         Statement createStatement = DataBaseConnector.createStatement();
         try {
             createStatement.executeUpdate("CREATE TABLE ACCOUNT(ID INT PRIMARY KEY, NAME VARCHAR(255), BALANCE DECIMAL);");
@@ -49,6 +52,15 @@ public class MoneyManager {
     }
 
 
+    /**
+     * Prepare data and transfer money between accounts
+     *
+     * @param request
+     *         request spark data
+     * @param response
+     *         response spark data
+     * @return json response
+     */
     private static String transfer(Request request, Response response) {
 
         JsonElement jsonElement = new JsonParser().parse(request.body());
@@ -60,28 +72,42 @@ public class MoneyManager {
 
         response.type("application/json");
 
+        StandardResponse standardResponse = doTransferMoney(senderId, receiverID, amount);
+        return new Gson().toJson(standardResponse);
 
+    }
+
+    /**
+     * Load accounts by ID's and try to transfer money
+     *
+     * @param senderId
+     *         id of sender account
+     * @param receiverId
+     *         id of reciever account
+     * @param amount
+     *         value on transfered money
+     * @return response
+     */
+    private static StandardResponse doTransferMoney(String senderId, String receiverId, BigDecimal amount) {
         Account sender = AccountView.loadAccount(senderId);
-        Account receiver = AccountView.loadAccount(receiverID);
+        Account receiver = AccountView.loadAccount(receiverId);
 
-
+        StandardResponse response;
         if (sender != null && receiver != null) {
             if (sender.getBalance().compareTo(amount) >= 0) {
                 sender.setBalance(sender.getBalance().subtract(amount));
                 receiver.setBalance(receiver.getBalance().add(amount));
                 DataBaseConnector.save();
-                response.body("Success.");
-                response.status(200);
             } else {
-                return new Gson().toJson(new StandardResponse(ResponseStatus.ERROR, "Sender don't have enough money."));
-
+                response = new StandardResponse(ResponseStatus.ERROR, Messages.SENDER_DONT_HAVE_ENOUGH_MONEY);
+                return response;
             }
         } else {
-            return new Gson().toJson(new StandardResponse(ResponseStatus.ERROR, "Can't find account by id."));
+            response = new StandardResponse(ResponseStatus.ERROR, Messages.ACCOUNT_NOT_FOUND);
+            return response;
         }
-        return new Gson().toJson(new StandardResponse(ResponseStatus.SUCCESS, "Money transfered"));
-
+        response = new StandardResponse(ResponseStatus.SUCCESS, Messages.TRANSFER_SUCCESS);
+        return response;
     }
-
 
 }

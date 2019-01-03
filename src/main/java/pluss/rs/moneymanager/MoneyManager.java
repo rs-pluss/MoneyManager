@@ -1,8 +1,14 @@
 package pluss.rs.moneymanager;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import pluss.rs.moneymanager.database.AccountView;
 import pluss.rs.moneymanager.database.DataBaseConnector;
 import pluss.rs.moneymanager.model.Account;
+import pluss.rs.moneymanager.response.ResponseStatus;
+import pluss.rs.moneymanager.response.StandardResponse;
 import spark.Request;
 import spark.Response;
 
@@ -15,12 +21,14 @@ import static spark.Spark.post;
 
 public class MoneyManager {
     public static void main(String[] args) {
-        get("/create", MoneyManager::createDatabase);
+        get("/create", MoneyManager::initializeDatabase);
         post("/transfer", MoneyManager::transfer);
     }
 
 
-    private static String createDatabase(Request request, Response response) {
+
+
+    private static String initializeDatabase(Request request, Response response) {
 
         Statement createStatement = DataBaseConnector.createStatement();
         try {
@@ -41,14 +49,21 @@ public class MoneyManager {
     }
 
 
-    private static Response transfer(Request request, Response response) {
-        String result = "";
-        String senderId = request.queryParams("sender");
-        String receiverID = request.queryParams("receiver");
-        BigDecimal amount = new BigDecimal(request.queryParams("amount"));
+    private static String transfer(Request request, Response response) {
+
+        JsonElement jsonElement = new JsonParser().parse(request.body());
+        JsonObject jsonObject = jsonElement.getAsJsonObject();
+
+        String senderId = jsonObject.get("sender").getAsString();
+        String receiverID = jsonObject.get("receiver").getAsString();
+        BigDecimal amount = new BigDecimal(jsonObject.get("amount").getAsString());
+
+        response.type("application/json");
+
 
         Account sender = AccountView.loadAccount(senderId);
         Account receiver = AccountView.loadAccount(receiverID);
+
 
         if (sender != null && receiver != null) {
             if (sender.getBalance().compareTo(amount) >= 0) {
@@ -58,16 +73,14 @@ public class MoneyManager {
                 response.body("Success.");
                 response.status(200);
             } else {
-                result = "Sender don't have enough money.";
-                response.status(409);
+                return new Gson().toJson(new StandardResponse(ResponseStatus.ERROR, "Sender don't have enough money."));
+
             }
         } else {
-            result = "Can't find account by id.";
-            response.status(404);
-
+            return new Gson().toJson(new StandardResponse(ResponseStatus.ERROR, "Can't find account by id."));
         }
-        response.body(result);
-        return response;
+        return new Gson().toJson(new StandardResponse(ResponseStatus.SUCCESS, "Money transfered"));
+
     }
 
 

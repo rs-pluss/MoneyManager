@@ -4,6 +4,10 @@ import java.io.IOException;
 import java.sql.*;
 import java.util.Properties;
 
+/**
+ * H2Database connector
+ * Connect to the database and create statements
+ */
 public class DataBaseConnector {
 
     public static final String DB_CONFIG_PROPS = "db-config.properties";
@@ -12,11 +16,8 @@ public class DataBaseConnector {
     public static final String JDBC_PASSWORD = "password";
 
     private static DataBaseConnector instance;
-    String url;
-    String username;
-    String password;
 
-    Connection mainConnection;
+    private Connection mainConnection;
 
     private DataBaseConnector() {
         try {
@@ -24,23 +25,15 @@ public class DataBaseConnector {
             Properties prop = new Properties();
             classLoader.getResourceAsStream(DB_CONFIG_PROPS);
             prop.load(classLoader.getResourceAsStream(DB_CONFIG_PROPS));
-            url = prop.getProperty(JDBC_URL);
-            username = prop.getProperty(JDBC_USERNAME);
-            password = prop.getProperty(JDBC_PASSWORD);
+            String url = prop.getProperty(JDBC_URL);
+            String username = prop.getProperty(JDBC_USERNAME);
+            String password = prop.getProperty(JDBC_PASSWORD);
             mainConnection = DriverManager.getConnection(url, username, password);
+            mainConnection.setAutoCommit(false);
         } catch (IOException | SQLException e) {
             throw new RuntimeException(e);
         }
     }
-
-    private Connection createConnection() {
-        try {
-            return DriverManager.getConnection(url, username, password);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
 
     private static DataBaseConnector getInstance() {
         if (instance == null) {
@@ -49,27 +42,52 @@ public class DataBaseConnector {
         return instance;
     }
 
-    public static Connection getDedicatedConnection() {
-        return getInstance().createConnection();
-    }
-
-
-    public static Connection getMainConnection() {
+    /**
+     * @return connection to database
+     */
+    private static Connection getConnection() {
         return getInstance().mainConnection;
     }
 
+    /**
+     * Commit connection to database
+     */
+    public static void save() {
+        try {
+            getConnection().commit();
+        } catch (SQLException e) {
+            try {
+                getConnection().rollback();
+            } catch (SQLException e1) {
+                throw new RuntimeException("Can't rollback connection" + e1);
+            }
+            throw new RuntimeException("Can't commit connection" + e);
+        }
+    }
 
+    /**
+     * Create statement in main connection
+     *
+     * @return statement in main connection
+     */
     public static Statement createStatement() {
         try {
-            return getMainConnection().createStatement();
+            return getConnection().createStatement();
         } catch (SQLException e) {
             throw new RuntimeException("Can't create SQL statement");
         }
     }
 
-    public static PreparedStatement getPrepared(String preparedQuery) {
+    /**
+     * Create prepared statement in main connection from prepared query
+     *
+     * @param preparedQuery
+     *         query template for prepared statement
+     * @return PreparedStatement in main connection
+     */
+    public static PreparedStatement createPreparedStatement(String preparedQuery) {
         try {
-            return getMainConnection().prepareStatement(preparedQuery);
+            return getConnection().prepareStatement(preparedQuery);
         } catch (SQLException e) {
             throw new RuntimeException("Can't create SQL statement " + e);
         }

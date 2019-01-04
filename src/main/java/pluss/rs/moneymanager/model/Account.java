@@ -1,7 +1,5 @@
 package pluss.rs.moneymanager.model;
 
-import pluss.rs.moneymanager.database.view.AccountView;
-
 import java.math.BigDecimal;
 
 /**
@@ -10,9 +8,9 @@ import java.math.BigDecimal;
 public class Account {
 
 
-    final long id;
-    final String name;
-    BigDecimal balance;
+    private final long id;
+    private final String name;
+    private BigDecimal balance;
 
     public Account(long id,
                    String name,
@@ -50,6 +48,5 @@ public class Account {
      */
     public void setBalance(BigDecimal balance) {
         this.balance = balance;
-        AccountView.saveModel(this);
     }
 }

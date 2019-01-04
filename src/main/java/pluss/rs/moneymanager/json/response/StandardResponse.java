@@ -6,9 +6,12 @@ package pluss.rs.moneymanager.json.response;
  */
 public class StandardResponse {
     /**
-     * Text of responce
+     * Text of response
      */
     private String text;
+    /**
+     * status of response {@link ResponseStatus}
+     */
     private ResponseStatus responseStatus;
 
     public StandardResponse(ResponseStatus responseStatus, String text) {
@@ -24,10 +27,19 @@ public class StandardResponse {
         this.text = text;
     }
 
+    /**
+     * @return status of response {@link ResponseStatus}
+     */
     public ResponseStatus getResponseStatus() {
         return responseStatus;
     }
 
+    /**
+     * set status of response {@link ResponseStatus}
+     *
+     * @param responseStatus
+     *         status
+     */
     public void setResponseStatus(ResponseStatus responseStatus) {
         this.responseStatus = responseStatus;
     }

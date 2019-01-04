@@ -1,6 +1,9 @@
 package pluss.rs.moneymanager.database;
 
+import pluss.rs.moneymanager.model.Account;
+
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.sql.*;
 import java.util.Properties;
 
@@ -38,27 +41,61 @@ public class DataBaseConnector {
         }
     }
 
-    /**
-     * @return singleton of the Connector
-     */
-    private static DataBaseConnector getInstance() {
-        if (instance == null) {
-            instance = new DataBaseConnector();
-        }
-        return instance;
+    public Connection getConnection() {
+        return mainConnection;
     }
 
     /**
-     * @return connection to database
+     * Load account from database
+     *
+     * @param accountId
+     *         account identifier
+     * @return Account model
      */
-    private static Connection getConnection() {
-        return getInstance().mainConnection;
+    public Account loadAccount(String accountId) {
+
+        try {
+            PreparedStatement preparedStatement = getConnection().prepareStatement(AccountDbConstants.GET_ACCOUNT_QUERY);
+            preparedStatement.setLong(1, Long.valueOf(accountId));
+
+            ResultSet rs = preparedStatement.executeQuery();
+            Account account;
+            if (rs.next()) {
+                long id = rs.getLong("id");
+                String name = rs.getString("name");
+                BigDecimal balance = rs.getBigDecimal("balance");
+                account = new Account(id, name, balance);
+            } else {
+                account = null;
+            }
+            return account;
+        } catch (SQLException e) {
+            throw new RuntimeException("Can't load model " + e);
+        }
+    }
+
+
+    /**
+     * Save account model on database
+     *
+     * @param account
+     *         model for save
+     */
+    public void saveModel(Account account) {
+        try {
+            PreparedStatement changeBalanceStatement = getConnection().prepareStatement(AccountDbConstants.CHANGE_BALANCE_QUERY);
+            changeBalanceStatement.setBigDecimal(1, (account.getBalance()));
+            changeBalanceStatement.setLong(2, account.getId());
+            changeBalanceStatement.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
      * Commit connection to database
      */
-    public static void save() {
+    public void commit() {
         try {
             getConnection().commit();
         } catch (SQLException e) {
@@ -71,31 +108,14 @@ public class DataBaseConnector {
         }
     }
 
-    /**
-     * Create statement in main connection
-     *
-     * @return statement in main connection
-     */
-    public static Statement createStatement() {
-        try {
-            return getConnection().createStatement();
-        } catch (SQLException e) {
-            throw new RuntimeException("Can't create SQL statement");
-        }
-    }
 
     /**
-     * Create prepared statement in main connection from prepared query
-     *
-     * @param preparedQuery
-     *         query template for prepared statement
-     * @return PreparedStatement in main connection
+     * @return singleton of the Connector
      */
-    public static PreparedStatement createPreparedStatement(String preparedQuery) {
-        try {
-            return getConnection().prepareStatement(preparedQuery);
-        } catch (SQLException e) {
-            throw new RuntimeException("Can't create SQL statement " + e);
+    public static DataBaseConnector getInstance() {
+        if (instance == null) {
+            instance = new DataBaseConnector();
         }
+        return instance;
     }
 }

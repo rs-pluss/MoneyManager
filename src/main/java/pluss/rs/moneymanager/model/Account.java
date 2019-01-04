@@ -1,6 +1,6 @@
 package pluss.rs.moneymanager.model;
 
-import pluss.rs.moneymanager.database.AccountView;
+import pluss.rs.moneymanager.database.view.AccountView;
 
 import java.math.BigDecimal;
 

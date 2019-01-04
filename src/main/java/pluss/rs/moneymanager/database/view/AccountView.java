@@ -1,5 +1,6 @@
-package pluss.rs.moneymanager.database;
+package pluss.rs.moneymanager.database.view;
 
+import pluss.rs.moneymanager.database.DataBaseConnector;
 import pluss.rs.moneymanager.model.Account;
 
 import java.math.BigDecimal;

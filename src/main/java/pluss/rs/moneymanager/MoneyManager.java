@@ -4,8 +4,8 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import pluss.rs.moneymanager.database.AccountView;
 import pluss.rs.moneymanager.database.DataBaseConnector;
+import pluss.rs.moneymanager.database.view.AccountView;
 import pluss.rs.moneymanager.model.Account;
 import pluss.rs.moneymanager.response.ResponseStatus;
 import pluss.rs.moneymanager.response.StandardResponse;
@@ -30,27 +30,6 @@ public class MoneyManager {
         get("/create", MoneyManager::initializeDatabase);
         post("/transfer", MoneyManager::transfer);
     }
-
-
-    private static String initializeDatabase(Request request, Response response) {
-        Statement createStatement = DataBaseConnector.createStatement();
-        try {
-            createStatement.executeUpdate("CREATE TABLE ACCOUNT(ID INT PRIMARY KEY, NAME VARCHAR(255), BALANCE DECIMAL);");
-            createStatement.executeUpdate("INSERT INTO ACCOUNT VALUES(1, 'Rin', 12500);");
-            createStatement.executeUpdate("INSERT INTO ACCOUNT VALUES(2, 'Sun', 9500);");
-            createStatement.executeUpdate("INSERT INTO ACCOUNT VALUES(3, 'Propan', 6200);");
-            createStatement.executeUpdate("INSERT INTO ACCOUNT VALUES(4, 'Pooran', 900);");
-            createStatement.executeUpdate("INSERT INTO ACCOUNT VALUES(5, 'Richi', 99900);");
-            createStatement.executeUpdate("INSERT INTO ACCOUNT VALUES(6, 'Sauan', 3700);");
-            DataBaseConnector.save();
-        } catch (SQLException e) {
-            System.err.print(e);
-            return "failed ";
-        }
-
-        return "Success.";
-    }
-
 
     /**
      * Prepare data and transfer money between accounts
@@ -110,4 +89,30 @@ public class MoneyManager {
         return response;
     }
 
+
+    /**
+     * Create table and initialize data on database. Implements just for tests and debug
+     *
+     * @param request
+     * @param response
+     * @return status
+     */
+    private static String initializeDatabase(Request request, Response response) {
+        Statement createStatement = DataBaseConnector.createStatement();
+        try {
+            createStatement.executeUpdate("CREATE TABLE ACCOUNT(ID INT PRIMARY KEY, NAME VARCHAR(255), BALANCE DECIMAL);");
+            createStatement.executeUpdate("INSERT INTO ACCOUNT VALUES(1, 'Rin', 12500);");
+            createStatement.executeUpdate("INSERT INTO ACCOUNT VALUES(2, 'Sun', 9500);");
+            createStatement.executeUpdate("INSERT INTO ACCOUNT VALUES(3, 'Propan', 6200);");
+            createStatement.executeUpdate("INSERT INTO ACCOUNT VALUES(4, 'Pooran', 900);");
+            createStatement.executeUpdate("INSERT INTO ACCOUNT VALUES(5, 'Richi', 99900);");
+            createStatement.executeUpdate("INSERT INTO ACCOUNT VALUES(6, 'Sauan', 3700);");
+            DataBaseConnector.save();
+        } catch (SQLException e) {
+            System.err.print(e);
+            return "failed ";
+        }
+
+        return "Success.";
+    }
 }

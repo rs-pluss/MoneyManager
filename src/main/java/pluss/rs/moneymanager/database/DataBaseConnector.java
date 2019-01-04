@@ -6,7 +6,7 @@ import java.util.Properties;
 
 /**
  * H2Database connector
- * Connect to the database and create statements
+ * Manage connection to the database and create statements
  */
 public class DataBaseConnector {
 
@@ -19,6 +19,9 @@ public class DataBaseConnector {
 
     private Connection mainConnection;
 
+    /**
+     * Constructor, initialize connection to database
+     */
     private DataBaseConnector() {
         try {
             ClassLoader classLoader = getClass().getClassLoader();
@@ -35,6 +38,9 @@ public class DataBaseConnector {
         }
     }
 
+    /**
+     * @return singleton of the Connector
+     */
     private static DataBaseConnector getInstance() {
         if (instance == null) {
             instance = new DataBaseConnector();

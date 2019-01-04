@@ -1,4 +1,4 @@
-package pluss.rs.moneymanager.response;
+package pluss.rs.moneymanager.json.response;
 
 /**
  * Response status types
